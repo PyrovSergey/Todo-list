@@ -10,11 +10,17 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
     
-    var itemArray = ["One", "Two", "Three"]
+    var itemArray = [String]()
+    
+    let defaults = UserDefaults.standard
 
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        if let saveArray = defaults.value(forKey: "TodoList") as? [String] {
+            itemArray = saveArray
+        }
+
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -55,6 +61,7 @@ class TodoListViewController: UITableViewController {
             print("Succes")
             if let resultTextInput = inputTextItem.text {
                 self.itemArray.append(resultTextInput)
+                self.defaults.set(self.itemArray, forKey: "TodoList")
                 self.tableView.reloadData()
             }
         }
