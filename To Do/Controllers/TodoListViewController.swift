@@ -34,8 +34,8 @@ class TodoListViewController: SwipeTableViewController {
             if let navBar = navigationController?.navigationBar {
                 if let navBarColour = UIColor(hexString: colourHex) {
                     navBar.barTintColor = navBarColour
-                    navBar.tintColor = ContrastColorOf(navBarColour, returnFlat: true)
-                    navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(navBarColour, returnFlat: true)]
+                    navBar.tintColor = ContrastColorOf(backgroundColor: navBarColour, returnFlat: true)
+                    navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(backgroundColor: navBarColour, returnFlat: true)]
                     searchBar.barTintColor = navBarColour
                 }
             }
@@ -60,7 +60,7 @@ class TodoListViewController: SwipeTableViewController {
             cell.accessoryType = item.isDone ? .checkmark : .none
             if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)) {
                 cell.backgroundColor = colour
-                cell.textLabel?.textColor = ContrastColorOf(colour, returnFlat: true)
+                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
             }
         } else {
             cell.textLabel?.text = "No Items Added"
