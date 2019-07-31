@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8541018B7F34EF3E0B922C8E /* Pods_To_Do.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = EE48CFBEB037CAD005FB8259 /* Pods_To_Do.framework */; };
+		9205F91922F1B8FB003EB567 /* ToDo.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 9205F91722F1B8FB003EB567 /* ToDo.xcdatamodeld */; };
 		95256D9F2209DCDE007E1BA9 /* CategoryTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95256D9E2209DCDE007E1BA9 /* CategoryTableViewController.swift */; };
 		953A6AF4220B805C0094DD98 /* SwipeTableViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 953A6AF3220B805C0094DD98 /* SwipeTableViewController.swift */; };
 		95538EC522049F56006757BB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95538EC422049F56006757BB /* AppDelegate.swift */; };
@@ -21,6 +22,7 @@
 
 /* Begin PBXFileReference section */
 		52927D44A1848E71848F0EE0 /* Pods-To Do.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-To Do.release.xcconfig"; path = "Pods/Target Support Files/Pods-To Do/Pods-To Do.release.xcconfig"; sourceTree = "<group>"; };
+		9205F91822F1B8FB003EB567 /* ToDo.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = ToDo.xcdatamodel; sourceTree = "<group>"; };
 		95256D9E2209DCDE007E1BA9 /* CategoryTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryTableViewController.swift; sourceTree = "<group>"; };
 		953A6AF3220B805C0094DD98 /* SwipeTableViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwipeTableViewController.swift; sourceTree = "<group>"; };
 		95538EC122049F56006757BB /* To Do.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "To Do.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -119,6 +121,7 @@
 				9531F24622074FB200431C1D /* Views */,
 				9531F24722074FE500431C1D /* Supporting Files */,
 				95538ED022049F58006757BB /* Info.plist */,
+				9205F91722F1B8FB003EB567 /* ToDo.xcdatamodeld */,
 			);
 			path = "To Do";
 			sourceTree = "<group>";
@@ -251,6 +254,7 @@
 				95538EC722049F56006757BB /* TodoListViewController.swift in Sources */,
 				95538EC522049F56006757BB /* AppDelegate.swift in Sources */,
 				95256D9F2209DCDE007E1BA9 /* CategoryTableViewController.swift in Sources */,
+				9205F91922F1B8FB003EB567 /* ToDo.xcdatamodeld in Sources */,
 				953A6AF4220B805C0094DD98 /* SwipeTableViewController.swift in Sources */,
 				95EFBF70220AFE36002563D6 /* Category.swift in Sources */,
 			);
@@ -454,6 +458,19 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		9205F91722F1B8FB003EB567 /* ToDo.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				9205F91822F1B8FB003EB567 /* ToDo.xcdatamodel */,
+			);
+			currentVersion = 9205F91822F1B8FB003EB567 /* ToDo.xcdatamodel */;
+			path = ToDo.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
 	};
 	rootObject = 95538EB922049F56006757BB /* Project object */;
 }

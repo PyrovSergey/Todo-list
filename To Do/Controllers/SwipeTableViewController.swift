@@ -9,19 +9,25 @@
 import UIKit
 import SwipeCellKit
 
-class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegate {
+class SwipeTableViewController: UITableViewController {
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
+    func updateModel(at indexPath: IndexPath) {
+        // Update our data model
     }
+}
+
+// MARK: - TableView Datasource
+extension SwipeTableViewController {
     
-    //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! SwipeTableViewCell
         cell.delegate = self
         return cell
     }
+}
+
+// MARK: - SwipeTableViewCellDelegate
+extension SwipeTableViewController: SwipeTableViewCellDelegate {
     
     func tableView(_ tableView: UITableView, editActionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
         guard orientation == .right else { return nil }
@@ -38,9 +44,5 @@ class SwipeTableViewController: UITableViewController, SwipeTableViewCellDelegat
         var options = SwipeOptions()
         options.expansionStyle = .destructive
         return options
-    }
-    
-    func updateModel(at indexPath: IndexPath) {
-        // Update our data model
     }
 }
