@@ -7,7 +7,7 @@
 //
 
 import UIKit
-import RealmSwift
+import CoreData
 import ChameleonFramework
 
 
@@ -24,19 +24,19 @@ class TodoListViewController: SwipeTableViewController {
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
         
-        guard let item = todoItems?[indexPath.row], let _ = self.selectedCategory else { return }
+//        guard let item = todoItems[indexPath.row], let _ = self.selectedCategory else { return }
         
-        do {
-            try self.realm.write {
-                self.realm.delete(item)
-            }
-        } catch {
-            print("Error deleting item \(error)")
-        }
+//        do {
+//            try self.realm.write {
+//                self.realm.delete(item)
+//            }
+//        } catch {
+//            print("Error deleting item \(error)")
+//        }
     }
     
-    private var todoItems : Results<TodoItem>?
-    private let realm = try! Realm()
+    private var todoItems : [TodoItem] = []
+    //private let realm = try! Realm()
 }
 
 // MARK: - Override
@@ -61,21 +61,21 @@ extension TodoListViewController {
 extension TodoListViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoItems?.count ?? 1
+        return todoItems.count ?? 1
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        if let item = todoItems?[indexPath.row] {
-            cell.textLabel?.text = item.title
-            cell.accessoryType = item.isDone ? .checkmark : .none
-            if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)) {
-                cell.backgroundColor = colour
-                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
-            }
-        } else {
-            cell.textLabel?.text = "No Items Added"
-        }
+//        if let item = todoItems[indexPath.row] {
+//            cell.textLabel?.text = item.title
+//            cell.accessoryType = item.isDone ? .checkmark : .none
+//            if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems.count)) {
+//                cell.backgroundColor = colour
+//                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
+//            }
+//        } else {
+//            cell.textLabel?.text = "No Items Added"
+//        }
         return cell
     }
 }
@@ -85,16 +85,16 @@ extension TodoListViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
-        guard let item = todoItems?[indexPath.row] else { return }
+//        guard let item = todoItems[indexPath.row] else { return }
 
-        do {
-            try realm.write {
-                item.isDone = !item.isDone
-                //realm.delete(item)
-            }
-        } catch {
-            print("Error update item \(error)")
-        }
+//        do {
+//            try realm.write {
+//                item.isDone = !item.isDone
+//                //realm.delete(item)
+//            }
+//        } catch {
+//            print("Error update item \(error)")
+//        }
         tableView.reloadData()
     }
 }
@@ -109,16 +109,16 @@ extension TodoListViewController {
             (action) in
             if let resultTextInput = inputTextItem.text {
                 if let currentCategory = self.selectedCategory {
-                    do {
-                        try self.realm.write {
-                            let newTodoItem = TodoItem()
-                            newTodoItem.title = resultTextInput
-                            newTodoItem.dateCreated = Date()
-                            currentCategory.items.append(newTodoItem)
-                        }
-                    } catch {
-                        print("Error saving item \(error)")
-                    }
+//                    do {
+//                        try self.realm.write {
+//                            let newTodoItem = TodoItem()
+//                            newTodoItem.title = resultTextInput
+//                            newTodoItem.dateCreated = Date()
+//                            currentCategory.items.append(newTodoItem)
+//                        }
+//                    } catch {
+//                        print("Error saving item \(error)")
+//                    }
                 }
             }
             self.tableView.reloadData()
@@ -138,7 +138,7 @@ extension TodoListViewController {
 extension TodoListViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        todoItems = todoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        //todoItems = todoItems.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
 
@@ -156,7 +156,7 @@ extension TodoListViewController: UISearchBarDelegate {
 private extension TodoListViewController {
     
     func loadItems() {
-        todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
+        //todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
     

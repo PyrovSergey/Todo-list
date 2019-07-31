@@ -7,27 +7,33 @@
 //
 
 import UIKit
-import RealmSwift
+import CoreData
 import ChameleonFramework
 
 class CategoryTableViewController: SwipeTableViewController {
 
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
-        if let category = self.categoryArray?[indexPath.row] {
-            do {
-                try self.realm.write {
-                    self.realm.delete(category)
-                }
-            } catch {
-                print("Error deleting category \(error)")
-            }
-        }
+
+        
+        //let category = categoryArray[indexPath.row] as NSManagedObject
+        
+        //context.delete(category)
+        
+        print(indexPath.row)
+        
+//        do {
+//            try context.save()
+//        } catch {
+//            print(error.localizedDescription)
+//        }
+
     }
     
-    private let realm = try! Realm()
-    private var categoryArray : Results<Category>?
-        
+    //private let realm = try! Realm()
+    //private var categoryArray : Results<Category>?
+    private var categoryArray: [Category] = []
+    private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 }
 
 // MARK: - Override
@@ -44,7 +50,7 @@ extension CategoryTableViewController {
         
         let destinationVC = segue.destination as! TodoListViewController
         guard let indexPath = tableView.indexPathForSelectedRow else { return }
-        destinationVC.selectedCategory = categoryArray?[indexPath.row]
+        destinationVC.selectedCategory = categoryArray[indexPath.row]
     }
 }
 
@@ -52,13 +58,13 @@ extension CategoryTableViewController {
 extension CategoryTableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray?.count ?? 1
+        return categoryArray.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categoies Added Yet"
-        let colour = UIColor(hexString: categoryArray?[indexPath.row].colour ?? "1D9BF6")
+        cell.textLabel?.text = categoryArray[indexPath.row].name ?? "No Categoies Added Yet"
+        let colour = UIColor(hexString: categoryArray[indexPath.row].colour ?? "1D9BF6")
         cell.backgroundColor = colour
         cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour!, returnFlat: true)
         return cell
@@ -83,7 +89,9 @@ extension CategoryTableViewController {
             
             guard let resultTextItem = inputTextItem.text else { return }
             
-            let newCategory = Category()
+            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
+            
+            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
             newCategory.name = resultTextItem
             newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
             self.save(category: newCategory)
@@ -102,21 +110,38 @@ extension CategoryTableViewController {
 private extension CategoryTableViewController {
     
     func save(category: Category) {
+        
         do {
-            try realm.write {
-                realm.add(category)
-            }
+            categoryArray.append(category)
+            try context.save()
         } catch {
-            print("Error saving category \(error)")
+            print(error.localizedDescription)
         }
-        //tableView.beginUpdates()
+        
         tableView.reloadData()
         //tableView.insertRows(at: [IndexPath(row: (categoryArray?.count ?? 0) - 1, section: 0)], with: .automatic)
         //tableView.endUpdates()
     }
     
     func load() {
-        categoryArray = realm.objects(Category.self)
+        //categoryArray = realm.objects(Category.self)
+        let  fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+        
+        do {
+            
+            let resultFetchRequest = try context.fetch(fetchRequest)
+            
+            guard resultFetchRequest.isEmpty == false else { return }
+            
+            categoryArray = resultFetchRequest
+            
+            tableView.reloadData()
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        
         tableView.reloadData()
     }
     
