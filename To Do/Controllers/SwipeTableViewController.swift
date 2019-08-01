@@ -9,6 +9,7 @@
 import UIKit
 import SwipeCellKit
 
+
 class SwipeTableViewController: UITableViewController {
 
     func updateModel(at indexPath: IndexPath) {

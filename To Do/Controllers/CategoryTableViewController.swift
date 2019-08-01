@@ -10,6 +10,7 @@ import UIKit
 import CoreData
 import ChameleonFramework
 
+
 class CategoryTableViewController: SwipeTableViewController {
 
     //MARK: - Delete Data From Swipe
