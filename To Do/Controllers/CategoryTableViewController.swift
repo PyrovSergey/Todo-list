@@ -15,23 +15,11 @@ class CategoryTableViewController: SwipeTableViewController {
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
 
-        
-        //let category = categoryArray[indexPath.row] as NSManagedObject
-        
-        //context.delete(category)
-        
-        print(indexPath.row)
-        
-//        do {
-//            try context.save()
-//        } catch {
-//            print(error.localizedDescription)
-//        }
+        let category = categoryArray[indexPath.row] as Category
+        delete(category: category)
 
     }
     
-    //private let realm = try! Realm()
-    //private var categoryArray : Results<Category>?
     private var categoryArray: [Category] = []
     private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 }
@@ -41,7 +29,6 @@ extension CategoryTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         load()
         setupTableViewStyle()
     }
@@ -62,6 +49,7 @@ extension CategoryTableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray[indexPath.row].name ?? "No Categoies Added Yet"
         let colour = UIColor(hexString: categoryArray[indexPath.row].colour ?? "1D9BF6")
@@ -87,7 +75,7 @@ extension CategoryTableViewController {
         let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add category", style: .default) { action in
             
-            guard let resultTextItem = inputTextItem.text else { return }
+            guard let resultTextItem = inputTextItem.text, inputTextItem.text?.isEmpty == false else { return }
             
             let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
             
@@ -112,37 +100,48 @@ private extension CategoryTableViewController {
     func save(category: Category) {
         
         do {
+            
             categoryArray.append(category)
+            
             try context.save()
+            
         } catch {
             print(error.localizedDescription)
         }
         
-        tableView.reloadData()
-        //tableView.insertRows(at: [IndexPath(row: (categoryArray?.count ?? 0) - 1, section: 0)], with: .automatic)
-        //tableView.endUpdates()
+        tableView.beginUpdates()
+        tableView.insertRows(at: [IndexPath(row: categoryArray.count - 1, section: 0)], with: .automatic)
+        tableView.endUpdates()
+    }
+    
+    func delete(category: Category) {
+        
+        context.delete(category)
+        
+        do {
+            
+            try context.save()
+            
+            load()
+            
+        } catch {
+            print(error.localizedDescription)
+        }
     }
     
     func load() {
-        //categoryArray = realm.objects(Category.self)
+        
         let  fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
         
         do {
             
             let resultFetchRequest = try context.fetch(fetchRequest)
             
-            guard resultFetchRequest.isEmpty == false else { return }
-            
             categoryArray = resultFetchRequest
-            
-            tableView.reloadData()
             
         } catch {
             print(error.localizedDescription)
         }
-        
-        
-        tableView.reloadData()
     }
     
     func setupTableViewStyle() {

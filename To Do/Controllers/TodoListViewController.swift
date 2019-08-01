@@ -15,28 +15,17 @@ class TodoListViewController: SwipeTableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    var selectedCategory : Category? {
-        didSet {
-            loadItems()
-        }
-    }
+    var selectedCategory : Category?
 
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
         
-//        guard let item = todoItems[indexPath.row], let _ = self.selectedCategory else { return }
-        
-//        do {
-//            try self.realm.write {
-//                self.realm.delete(item)
-//            }
-//        } catch {
-//            print("Error deleting item \(error)")
-//        }
+        let item = todoItems[indexPath.row]
+        delete(todoItem: item)
     }
     
     private var todoItems : [TodoItem] = []
-    //private let realm = try! Realm()
+    private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 }
 
 // MARK: - Override
@@ -44,6 +33,7 @@ extension TodoListViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        load()
         setupTableViewStyle()
 
     }
@@ -61,21 +51,18 @@ extension TodoListViewController {
 extension TodoListViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoItems.count ?? 1
+        return todoItems.count
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-//        if let item = todoItems[indexPath.row] {
-//            cell.textLabel?.text = item.title
-//            cell.accessoryType = item.isDone ? .checkmark : .none
-//            if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems.count)) {
-//                cell.backgroundColor = colour
-//                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
-//            }
-//        } else {
-//            cell.textLabel?.text = "No Items Added"
-//        }
+        let item = todoItems[indexPath.row]
+            cell.textLabel?.text = item.title
+            cell.accessoryType = item.isDone ? .checkmark : .none
+            if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems.count)) {
+                cell.backgroundColor = colour
+                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
+        }
         return cell
     }
 }
@@ -85,16 +72,19 @@ extension TodoListViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
-//        guard let item = todoItems[indexPath.row] else { return }
-
-//        do {
-//            try realm.write {
-//                item.isDone = !item.isDone
-//                //realm.delete(item)
-//            }
-//        } catch {
-//            print("Error update item \(error)")
-//        }
+        let item = todoItems[indexPath.row]
+        
+        //let item = selectedCategory?.todoItems?.allObjects[indexPath.row] as! TodoItem
+        
+        item.isDone = !item.isDone
+        
+        do {
+            try context.save()
+            //load()
+        } catch {
+            print(error.localizedDescription)
+        }
+        
         tableView.reloadData()
     }
 }
@@ -107,21 +97,16 @@ extension TodoListViewController {
         let alert = UIAlertController(title: "Add new todo item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add item", style: .default) {
             (action) in
-            if let resultTextInput = inputTextItem.text {
-                if let currentCategory = self.selectedCategory {
-//                    do {
-//                        try self.realm.write {
-//                            let newTodoItem = TodoItem()
-//                            newTodoItem.title = resultTextInput
-//                            newTodoItem.dateCreated = Date()
-//                            currentCategory.items.append(newTodoItem)
-//                        }
-//                    } catch {
-//                        print("Error saving item \(error)")
-//                    }
-                }
-            }
-            self.tableView.reloadData()
+            guard let resultTextInput = inputTextItem.text, inputTextItem.text?.isEmpty == false else { return }
+            
+            let entity = NSEntityDescription.entity(forEntityName: "TodoItem", in: self.context)
+            
+            let newTodoItem = NSManagedObject(entity: entity!, insertInto: self.context) as! TodoItem
+            
+            newTodoItem.title = resultTextInput
+            newTodoItem.dateCreated = Date()
+            
+            self.save(todoItem: newTodoItem)
         }
         
         alert.addTextField {
@@ -138,16 +123,21 @@ extension TodoListViewController {
 extension TodoListViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        //todoItems = todoItems.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        
+        guard let searchString = searchBar.text else { return }
+        
+        todoItems = todoItems.filter { ($0.title?.lowercased().contains(searchString.lowercased()))! }
+        
         tableView.reloadData()
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
-            loadItems()
+            load()
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
+            tableView.reloadData()
         }
     }
 }
@@ -155,9 +145,42 @@ extension TodoListViewController: UISearchBarDelegate {
 // MARK: - Private
 private extension TodoListViewController {
     
-    func loadItems() {
-        //todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
-        tableView.reloadData()
+    func save(todoItem: TodoItem) {
+        
+        do {
+            
+            selectedCategory?.addToTodoItems(todoItem)
+            
+            try context.save()
+            load()
+            
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+        tableView.beginUpdates()
+        tableView.insertRows(at: [IndexPath(row: todoItems.count - 1, section: 0)], with: .automatic)
+        tableView.endUpdates()
+    }
+    
+    func delete(todoItem: TodoItem) {
+        
+        selectedCategory?.removeFromTodoItems(todoItem)
+        
+        do {
+            try context.save()
+            load()
+        } catch {
+            print(error.localizedDescription)
+        }
+        
+    }
+    
+    func load() {
+
+        let result = selectedCategory?.todoItems?.allObjects as! [TodoItem]
+        
+        todoItems = result.sorted(by: { $0.dateCreated!.compare($1.dateCreated!) == .orderedAscending })
     }
     
     func setupTableViewStyle() {

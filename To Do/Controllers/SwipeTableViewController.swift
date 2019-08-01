@@ -12,7 +12,7 @@ import SwipeCellKit
 class SwipeTableViewController: UITableViewController {
 
     func updateModel(at indexPath: IndexPath) {
-        // Update our data model
+        // update data model
     }
 }
 
@@ -20,7 +20,7 @@ class SwipeTableViewController: UITableViewController {
 extension SwipeTableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! SwipeTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as! SwipeTableViewCell
         cell.delegate = self
         return cell
     }
@@ -34,6 +34,7 @@ extension SwipeTableViewController: SwipeTableViewCellDelegate {
         let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
             // handle action by updating model with deletion
             self.updateModel(at: indexPath)
+            action.fulfill(with: .delete)
         }
         // customize the action appearance
         deleteAction.image = UIImage(named: "delete-icon")
@@ -43,6 +44,7 @@ extension SwipeTableViewController: SwipeTableViewCellDelegate {
     func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
         var options = SwipeOptions()
         options.expansionStyle = .destructive
+        options.transitionStyle = .border
         return options
     }
 }
