@@ -35,11 +35,14 @@ extension TodoListViewController {
         super.viewDidLoad()
         load()
         setupTableViewStyle()
-
     }
     
     override func viewWillAppear(_ animated: Bool) {
         setContrastColorOfNavigationItems()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -57,8 +60,9 @@ extension TodoListViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         let item = todoItems[indexPath.row]
-            cell.textLabel?.text = item.title
-            cell.accessoryType = item.isDone ? .checkmark : .none
+        cell.alpha = 0
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.isDone ? .checkmark : .none
             if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems.count)) {
                 cell.backgroundColor = colour
                 cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
@@ -74,13 +78,10 @@ extension TodoListViewController {
 
         let item = todoItems[indexPath.row]
         
-        //let item = selectedCategory?.todoItems?.allObjects[indexPath.row] as! TodoItem
-        
         item.isDone = !item.isDone
         
         do {
             try context.save()
-            //load()
         } catch {
             print(error.localizedDescription)
         }

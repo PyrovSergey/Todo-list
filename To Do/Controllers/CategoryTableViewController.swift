@@ -20,7 +20,7 @@ class CategoryTableViewController: SwipeTableViewController {
         delete(category: category)
 
     }
-    
+
     private var categoryArray: [Category] = []
     private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 }
@@ -32,6 +32,11 @@ extension CategoryTableViewController {
         super.viewDidLoad()
         load()
         setupTableViewStyle()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        appearanceAnimation(tableView: tableView)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -75,11 +80,11 @@ extension CategoryTableViewController {
         var inputTextItem = UITextField()
         let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add category", style: .default) { action in
-            
+
             guard let resultTextItem = inputTextItem.text, inputTextItem.text?.isEmpty == false else { return }
-            
+
             let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
-            
+
             let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
             newCategory.name = resultTextItem
             newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
@@ -92,6 +97,50 @@ extension CategoryTableViewController {
         }
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
+          //fillTheList() // stub
+    }
+    
+    // stub
+    func fillTheList() {
+        
+        for n in 0...100 {
+            
+            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
+            
+            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
+            newCategory.name = "\(n)"
+            newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
+            self.save(category: newCategory)
+            
+        }
+        
+    }
+}
+
+// MARK: - Animations
+private extension CategoryTableViewController {
+    
+    func appearanceAnimation(tableView: UITableView) {
+        
+        guard categoryArray.isEmpty == false else { return }
+
+        for index in 0...categoryArray.count - 1  {
+            
+            guard let cell = tableView.cellForRow(at: IndexPath(row: index, section: 0)) else { return }
+            
+            cell.alpha = 0
+            cell.transform = CGAffineTransform(translationX: 0, y: -(cell.frame.height) * 2)
+            
+            UIView.animate(withDuration: 0.8,
+                           delay: Double(index) * 0.1,
+                           usingSpringWithDamping: 0.5,
+                           initialSpringVelocity: 0.1,
+                           options: .curveEaseInOut,
+                           animations: {
+                            cell.alpha = 1
+                            cell.transform = .identity
+            })
+        }
     }
 }
 
@@ -139,7 +188,7 @@ private extension CategoryTableViewController {
             let resultFetchRequest = try context.fetch(fetchRequest)
             
             categoryArray = resultFetchRequest
-            
+
         } catch {
             print(error.localizedDescription)
         }
