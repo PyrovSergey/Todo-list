@@ -20,7 +20,8 @@ class CategoryTableViewController: SwipeTableViewController {
         delete(category: category)
 
     }
-
+    
+    private var firstOpening = (UIApplication.shared.delegate as? AppDelegate)?.firstOpeningScreen
     private var categoryArray: [Category] = []
     private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
 }
@@ -37,6 +38,7 @@ extension CategoryTableViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         appearanceAnimation(tableView: tableView)
+        firstOpening = false
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -122,7 +124,7 @@ private extension CategoryTableViewController {
     
     func appearanceAnimation(tableView: UITableView) {
         
-        guard categoryArray.isEmpty == false else { return }
+        guard categoryArray.isEmpty == false, firstOpening! else { return }
 
         for index in 0...categoryArray.count - 1  {
             
@@ -148,7 +150,7 @@ private extension CategoryTableViewController {
 private extension CategoryTableViewController {
     
     func save(category: Category) {
-        
+            
         do {
             
             categoryArray.append(category)
@@ -158,10 +160,11 @@ private extension CategoryTableViewController {
         } catch {
             print(error.localizedDescription)
         }
-        
         tableView.beginUpdates()
         tableView.insertRows(at: [IndexPath(row: categoryArray.count - 1, section: 0)], with: .automatic)
         tableView.endUpdates()
+        
+        scrollToNewRow()
     }
     
     func delete(category: Category) {
@@ -192,6 +195,10 @@ private extension CategoryTableViewController {
         } catch {
             print(error.localizedDescription)
         }
+    }
+    
+    func scrollToNewRow() {
+        tableView.scrollToRow(at: IndexPath(item: (categoryArray.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
     
     func setupTableViewStyle() {

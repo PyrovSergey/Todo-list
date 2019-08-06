@@ -162,6 +162,7 @@ private extension TodoListViewController {
         tableView.beginUpdates()
         tableView.insertRows(at: [IndexPath(row: todoItems.count - 1, section: 0)], with: .automatic)
         tableView.endUpdates()
+        scrollToNewRow()
     }
     
     func delete(todoItem: TodoItem) {
@@ -207,6 +208,10 @@ private extension TodoListViewController {
                 }
             }
         }
+    }
+    
+    func scrollToNewRow() {
+        tableView.scrollToRow(at: IndexPath(item: (todoItems.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
 }
 
