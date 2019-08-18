@@ -23,7 +23,22 @@ class CategoryTableViewController: SwipeTableViewController {
     
     private var firstOpening = (UIApplication.shared.delegate as? AppDelegate)?.firstOpeningScreen
     private var categoryArray: [Category] = []
-    private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private let dateSortDescriptor = NSSortDescriptor(key: "dateCreated", ascending: true)
+    
+    private lazy var fetchedResultsController: NSFetchedResultsController<Category> = {
+        
+        let fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+        
+        fetchRequest.sortDescriptors = [ dateSortDescriptor ]
+        
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+                                                                  managedObjectContext: context,
+                                                                  sectionNameKeyPath: nil,
+                                                                  cacheName: nil)
+        
+        return fetchedResultsController
+    }()
 }
 
 // MARK: - Override
@@ -31,6 +46,7 @@ extension CategoryTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        prepareFetchedResultController()
         load()
         setupTableViewStyle()
     }
@@ -90,6 +106,7 @@ extension CategoryTableViewController {
             let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
             newCategory.name = resultTextItem
             newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
+            newCategory.dateCreated = Date()
             self.save(category: newCategory)
 
         }
@@ -115,7 +132,6 @@ extension CategoryTableViewController {
             self.save(category: newCategory)
             
         }
-        
     }
 }
 
@@ -146,8 +162,40 @@ private extension CategoryTableViewController {
     }
 }
 
+// MARK: - NSFetchedResultsControllerDelegate
+extension CategoryTableViewController: NSFetchedResultsControllerDelegate {
+    
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.beginUpdates()
+    }
+    
+    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
+        
+        guard type == .insert else { return }
+        
+        tableView.insertRows(at: [IndexPath(row: categoryArray.count - 1, section: 0)], with: .automatic)
+    }
+    
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        tableView.endUpdates()
+    }
+}
+
 // MARK: - Private
 private extension CategoryTableViewController {
+    
+    func prepareFetchedResultController() {
+        
+        fetchedResultsController.delegate = self
+        
+        do {
+            try self.fetchedResultsController.performFetch()
+        } catch {
+            let fetchError = error as NSError
+            print("Unable to Perform Fetch Request")
+            print("\(fetchError), \(fetchError.localizedDescription)")
+        }
+    }
     
     func save(category: Category) {
             
@@ -160,9 +208,6 @@ private extension CategoryTableViewController {
         } catch {
             print(error.localizedDescription)
         }
-        tableView.beginUpdates()
-        tableView.insertRows(at: [IndexPath(row: categoryArray.count - 1, section: 0)], with: .automatic)
-        tableView.endUpdates()
         
         scrollToNewRow()
     }
@@ -185,6 +230,8 @@ private extension CategoryTableViewController {
     func load() {
         
         let  fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
+        
+        fetchRequest.sortDescriptors = [ dateSortDescriptor ]
         
         do {
             

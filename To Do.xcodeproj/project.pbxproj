@@ -54,14 +54,14 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		9531F24422074F3A00431C1D /* Controllers */ = {
+		9531F24422074F3A00431C1D /* Screens */ = {
 			isa = PBXGroup;
 			children = (
 				95256D9E2209DCDE007E1BA9 /* CategoryTableViewController.swift */,
 				95538EC622049F56006757BB /* TodoListViewController.swift */,
 				953A6AF3220B805C0094DD98 /* SwipeTableViewController.swift */,
 			);
-			path = Controllers;
+			path = Screens;
 			sourceTree = "<group>";
 		};
 		9531F24622074FB200431C1D /* Views */ = {
@@ -103,7 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				95538EC422049F56006757BB /* AppDelegate.swift */,
-				9531F24422074F3A00431C1D /* Controllers */,
+				9531F24422074F3A00431C1D /* Screens */,
 				9531F24622074FB200431C1D /* Views */,
 				9531F24722074FE500431C1D /* Supporting Files */,
 				95538ED022049F58006757BB /* Info.plist */,
