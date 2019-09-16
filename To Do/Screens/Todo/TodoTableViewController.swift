@@ -11,11 +11,11 @@ import CoreData
 import ChameleonFramework
 
 
-class TodoListViewController: SwipeTableViewController {
+class TodoTableViewController: SwipeTableViewController {
     
     @IBOutlet weak var searchBar: UISearchBar!
     
-    var selectedCategory : Category?
+    private var selectedCategory : Category?
 
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
@@ -29,29 +29,31 @@ class TodoListViewController: SwipeTableViewController {
 }
 
 // MARK: - Override
-extension TodoListViewController {
+extension TodoTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
         load()
-        setupTableViewStyle()
+        setupView()
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         setContrastColorOfNavigationItems()
     }
+
+}
+
+// MARK: - Public interface
+extension TodoTableViewController {
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        setDefoltStateNavigationController()
+    func configure(category: Category) {
+        selectedCategory = category
     }
 }
 
 // MARK: - Tableview Datasource
-extension TodoListViewController {
+extension TodoTableViewController {
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return todoItems.count
@@ -72,7 +74,7 @@ extension TodoListViewController {
 }
 
 // MARK: - TableView Delegate
-extension TodoListViewController {
+extension TodoTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 
@@ -91,9 +93,9 @@ extension TodoListViewController {
 }
 
 // MARK: - Actions
-extension TodoListViewController {
+extension TodoTableViewController {
     
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+    @objc func addButtonPressed() {
         var inputTextItem = UITextField()
         let alert = UIAlertController(title: "Add new todo item", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add item", style: .default) {
@@ -121,7 +123,7 @@ extension TodoListViewController {
 }
 
 //MARK: - Search bar methods
-extension TodoListViewController: UISearchBarDelegate {
+extension TodoTableViewController: UISearchBarDelegate {
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
@@ -144,7 +146,7 @@ extension TodoListViewController: UISearchBarDelegate {
 }
 
 // MARK: - Private
-private extension TodoListViewController {
+private extension TodoTableViewController {
     
     func save(todoItem: TodoItem) {
         
@@ -185,15 +187,12 @@ private extension TodoListViewController {
         todoItems = result.sorted(by: { $0.dateCreated!.compare($1.dateCreated!) == .orderedAscending })
     }
     
-    func setupTableViewStyle() {
+    func setupView() {
         tableView.rowHeight = 60.0
         tableView.separatorStyle = .none
-    }
-    
-    func setDefoltStateNavigationController() {
-        navigationController?.navigationBar.barTintColor = UIColor(hexString: "1D9BF6")
-        navigationController?.navigationBar.tintColor = FlatWhite()
-        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: FlatWhite()]
+        
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
+        navigationItem.rightBarButtonItems = [addButton]
     }
     
     func setContrastColorOfNavigationItems() {
@@ -214,5 +213,7 @@ private extension TodoListViewController {
         tableView.scrollToRow(at: IndexPath(item: (todoItems.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
 }
+
+extension TodoTableViewController: StoryboardInstantinable {}
 
 

@@ -48,20 +48,18 @@ extension CategoryTableViewController {
         super.viewDidLoad()
         prepareFetchedResultController()
         load()
-        setupTableViewStyle()
+        setupView()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        setupNavigationBarStyle()
     }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         appearanceAnimation(tableView: tableView)
         firstOpening = false
-    }
-    
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        
-        let destinationVC = segue.destination as! TodoListViewController
-        guard let indexPath = tableView.indexPathForSelectedRow else { return }
-        destinationVC.selectedCategory = categoryArray[indexPath.row]
     }
 }
 
@@ -87,14 +85,17 @@ extension CategoryTableViewController {
 extension CategoryTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        performSegue(withIdentifier: "goToItems", sender: self)
+        
+        ///performSegue(withIdentifier: "goToItems", sender: self)
+        
+        Router.shared.openTodoTableViewController(category: categoryArray[indexPath.row])
     }
 }
 
 // MARK: - Actions
 extension CategoryTableViewController {
     
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+    @objc func addButtonPressed() {
         var inputTextItem = UITextField()
         let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add category", style: .default) { action in
@@ -120,19 +121,19 @@ extension CategoryTableViewController {
     }
     
     // stub
-    func fillTheList() {
-        
-        for n in 0...100 {
-            
-            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
-            
-            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
-            newCategory.name = "\(n)"
-            newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
-            self.save(category: newCategory)
-            
-        }
-    }
+//    func fillTheList() {
+//
+//        for n in 0...100 {
+//
+//            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
+//
+//            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
+//            newCategory.name = "\(n)"
+//            newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
+//            self.save(category: newCategory)
+//
+//        }
+//    }
 }
 
 // MARK: - Animations
@@ -248,8 +249,23 @@ private extension CategoryTableViewController {
         tableView.scrollToRow(at: IndexPath(item: (categoryArray.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
     
-    func setupTableViewStyle() {
+    func setupView() {
         tableView.rowHeight = 60.0
         tableView.separatorStyle = .none
+        
+        navigationController?.setNavigationBarHidden(false, animated: true)
+        navigationController?.navigationBar.prefersLargeTitles = true
+        
+        let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
+        navigationItem.rightBarButtonItems = [addButton]
+    }
+    
+    func setupNavigationBarStyle() {
+        title = "Category"
+        navigationController?.navigationBar.barTintColor = UIColor.categoryColor
+        navigationController?.navigationBar.tintColor = FlatWhite()
+        navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: FlatWhite()]
     }
 }
+
+extension CategoryTableViewController: StoryboardInstantinable {}

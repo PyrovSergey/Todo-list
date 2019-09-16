@@ -9,5 +9,6 @@ target 'To Do' do
 
 pod 'SwipeCellKit'
 pod 'ChameleonFramework/Swift'
+pod 'SwiftHEXColors'
 
 end
