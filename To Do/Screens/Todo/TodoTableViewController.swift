@@ -6,26 +6,23 @@
 //  Copyright © 2019 Sergey. All rights reserved.
 //
 
-import UIKit
-import CoreData
+import RxSwift
+import RxCocoa
 import ChameleonFramework
+import SwipeCellKit
 
 
 class TodoTableViewController: SwipeTableViewController {
     
-    @IBOutlet weak var searchBar: UISearchBar!
-    
-    private var selectedCategory : Category?
+    @IBOutlet private weak var searchBar: UISearchBar!
+    @IBOutlet private var viewModel: TodoViewModel!
 
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
-        
-        let item = todoItems[indexPath.row]
-        delete(todoItem: item)
+        viewModel.delete(indexPath: indexPath)
     }
     
-    private var todoItems : [TodoItem] = []
-    private lazy var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    private let bag = DisposeBag()
 }
 
 // MARK: - Override
@@ -33,7 +30,6 @@ extension TodoTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        load()
         setupView()
     }
     
@@ -41,54 +37,13 @@ extension TodoTableViewController {
         super.viewWillAppear(animated)
         setContrastColorOfNavigationItems()
     }
-
 }
 
 // MARK: - Public interface
 extension TodoTableViewController {
     
     func configure(category: Category) {
-        selectedCategory = category
-    }
-}
-
-// MARK: - Tableview Datasource
-extension TodoTableViewController {
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoItems.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        let item = todoItems[indexPath.row]
-        cell.alpha = 0
-        cell.textLabel?.text = item.title
-        cell.accessoryType = item.isDone ? .checkmark : .none
-            if let colour = UIColor(hexString: (selectedCategory?.colour)!)?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems.count)) {
-                cell.backgroundColor = colour
-                cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
-        }
-        return cell
-    }
-}
-
-// MARK: - TableView Delegate
-extension TodoTableViewController {
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-
-        let item = todoItems[indexPath.row]
-        
-        item.isDone = !item.isDone
-        
-        do {
-            try context.save()
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        tableView.reloadData()
+        viewModel.config(category: category)
     }
 }
 
@@ -101,17 +56,15 @@ extension TodoTableViewController {
         let action = UIAlertAction(title: "Add item", style: .default) {
             (action) in
             guard let resultTextInput = inputTextItem.text, inputTextItem.text?.isEmpty == false else { return }
-            
-            let entity = NSEntityDescription.entity(forEntityName: "TodoItem", in: self.context)
-            
-            let newTodoItem = NSManagedObject(entity: entity!, insertInto: self.context) as! TodoItem
-            
-            newTodoItem.title = resultTextInput
-            newTodoItem.dateCreated = Date()
-            
-            self.save(todoItem: newTodoItem)
+
+            self.viewModel.save(title: resultTextInput)
+                .subscribe(onCompleted: {
+                self.scrollToNewRow()
+            }, onError: { error in
+                print(error.localizedDescription)
+                }).disposed(by: self.bag)
         }
-        
+
         alert.addTextField {
             (textField) in
             textField.placeholder = "Create new item"
@@ -122,82 +75,51 @@ extension TodoTableViewController {
     }
 }
 
-//MARK: - Search bar methods
-extension TodoTableViewController: UISearchBarDelegate {
-    
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
-        guard let searchString = searchBar.text else { return }
-        
-        todoItems = todoItems.filter { ($0.title?.lowercased().contains(searchString.lowercased()))! }
-        
-        tableView.reloadData()
-    }
-
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.count == 0 {
-            load()
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-            tableView.reloadData()
-        }
-    }
-}
-
 // MARK: - Private
 private extension TodoTableViewController {
     
-    func save(todoItem: TodoItem) {
-        
-        do {
-            
-            selectedCategory?.addToTodoItems(todoItem)
-            
-            try context.save()
-            load()
-            
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        tableView.beginUpdates()
-        tableView.insertRows(at: [IndexPath(row: todoItems.count - 1, section: 0)], with: .automatic)
-        tableView.endUpdates()
-        scrollToNewRow()
-    }
-    
-    func delete(todoItem: TodoItem) {
-        
-        selectedCategory?.removeFromTodoItems(todoItem)
-        
-        do {
-            try context.save()
-            load()
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-    }
-    
-    func load() {
-
-        let result = selectedCategory?.todoItems?.allObjects as! [TodoItem]
-        
-        todoItems = result.sorted(by: { $0.dateCreated!.compare($1.dateCreated!) == .orderedAscending })
-    }
-    
     func setupView() {
+        
+        tableView.delegate = nil
+        tableView.dataSource = nil
         tableView.rowHeight = 60.0
         tableView.separatorStyle = .none
         
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
         navigationItem.rightBarButtonItems = [addButton]
+        
+        subscribe()
+    }
+    
+    func subscribe() {
+        
+        viewModel.todoItem
+            .drive(tableView.rx.items(cellIdentifier: "todoCell", cellType: SwipeTableViewCell.self)) { row, element, cell in
+            cell.rx.base.delegate = self
+            cell.alpha = 0
+            cell.textLabel?.text = element.title
+            cell.accessoryType = element.isDone ? .checkmark : .none
+            if let colour = UIColor(hexString: self.viewModel.color).darken(byPercentage: CGFloat(row) / CGFloat(self.viewModel.numberOfRows())) {
+                        cell.backgroundColor = colour
+                        cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour, returnFlat: true)
+                }
+            }.disposed(by: bag)
+        
+        tableView.rx
+            .itemSelected
+            .subscribe(onNext: { indexPath in
+            self.viewModel.selectedTodoItem(at: indexPath)
+        }).disposed(by: bag)
+        
+        searchBar.rx.text
+            .orEmpty
+            .bind(to: viewModel.searchText)
+            .disposed(by: bag)
     }
     
     func setContrastColorOfNavigationItems() {
-        if let colourHex = selectedCategory?.colour {
-            title = selectedCategory?.name
+        if let colourHex = viewModel.color {
+            title = viewModel.name
             if let navBar = navigationController?.navigationBar {
                 if let navBarColour = UIColor(hexString: colourHex) {
                     navBar.barTintColor = navBarColour
@@ -210,10 +132,11 @@ private extension TodoTableViewController {
     }
     
     func scrollToNewRow() {
-        tableView.scrollToRow(at: IndexPath(item: (todoItems.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
+        tableView.scrollToRow(at: IndexPath(item: viewModel.numberOfRows() - 1, section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
 }
 
+// MARK: - StoryboardInstantinable
 extension TodoTableViewController: StoryboardInstantinable {}
 
 

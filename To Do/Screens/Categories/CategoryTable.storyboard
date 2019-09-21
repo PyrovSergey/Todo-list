@@ -18,7 +18,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" alpha="0.0" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="Cell" id="DSI-al-4hu" customClass="SwipeTableViewCell" customModule="SwipeCellKit">
+                            <tableViewCell clipsSubviews="YES" alpha="0.0" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="categoryCell" id="DSI-al-4hu" customClass="SwipeTableViewCell" customModule="SwipeCellKit">
                                 <rect key="frame" x="0.0" y="28" width="414" height="44"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="DSI-al-4hu" id="w10-B3-XSg">
@@ -27,13 +27,13 @@
                                 </tableViewCellContentView>
                             </tableViewCell>
                         </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="HKq-5V-6PI" id="nhy-k7-xK2"/>
-                            <outlet property="delegate" destination="HKq-5V-6PI" id="cKH-tB-9Hl"/>
-                        </connections>
                     </tableView>
+                    <connections>
+                        <outlet property="viewModel" destination="hyP-Bv-Rbn" id="9fo-b8-ATP"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="3py-lk-I4o" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <customObject id="hyP-Bv-Rbn" customClass="CategoryViewModel" customModule="To_Do" customModuleProvider="target"/>
             </objects>
             <point key="canvasLocation" x="1204" y="-216"/>
         </scene>

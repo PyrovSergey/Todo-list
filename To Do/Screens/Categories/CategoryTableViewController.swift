@@ -7,38 +7,23 @@
 //
 
 import UIKit
-import CoreData
+import SwipeCellKit
 import ChameleonFramework
+import RxSwift
+import RxCocoa
 
 
 class CategoryTableViewController: SwipeTableViewController {
 
+    @IBOutlet private var viewModel: CategoryViewModel!
+    
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
-
-        let category = categoryArray[indexPath.row] as Category
-        delete(category: category)
-
+        viewModel.delete(indexPath: indexPath)
     }
     
     private var firstOpening = (UIApplication.shared.delegate as? AppDelegate)?.firstOpeningScreen
-    private var categoryArray: [Category] = []
-    private var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-    private let dateSortDescriptor = NSSortDescriptor(key: "dateCreated", ascending: true)
-    
-    private lazy var fetchedResultsController: NSFetchedResultsController<Category> = {
-        
-        let fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        
-        fetchRequest.sortDescriptors = [ dateSortDescriptor ]
-        
-        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-                                                                  managedObjectContext: context,
-                                                                  sectionNameKeyPath: nil,
-                                                                  cacheName: nil)
-        
-        return fetchedResultsController
-    }()
+    private let bag = DisposeBag()
 }
 
 // MARK: - Override
@@ -46,9 +31,8 @@ extension CategoryTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        prepareFetchedResultController()
-        load()
         setupView()
+        viewModel.load()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -58,37 +42,8 @@ extension CategoryTableViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        appearanceAnimation(tableView: tableView)
+        appearanceAnimation()
         firstOpening = false
-    }
-}
-
-// MARK: - TableView Datasource
-extension CategoryTableViewController {
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
-    }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray[indexPath.row].name ?? "No Categoies Added Yet"
-        let colour = UIColor(hexString: categoryArray[indexPath.row].colour ?? "1D9BF6")
-        cell.backgroundColor = colour
-        cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour!, returnFlat: true)
-        return cell
-    }
-}
-
-// MARK: - TableView Delegate
-extension CategoryTableViewController {
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        
-        ///performSegue(withIdentifier: "goToItems", sender: self)
-        
-        Router.shared.openTodoTableViewController(category: categoryArray[indexPath.row])
     }
 }
 
@@ -96,60 +51,49 @@ extension CategoryTableViewController {
 extension CategoryTableViewController {
     
     @objc func addButtonPressed() {
+        
         var inputTextItem = UITextField()
         let alert = UIAlertController(title: "Add new category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add category", style: .default) { action in
 
-            guard let resultTextItem = inputTextItem.text, inputTextItem.text?.isEmpty == false else { return }
-
-            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
-
-            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
-            newCategory.name = resultTextItem
-            newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
-            newCategory.dateCreated = Date()
-            self.save(category: newCategory)
-
+            guard let resultTextItem = inputTextItem.text,
+                      inputTextItem.text?.isEmpty == false,
+                  let color = UIColor.randomFlat().lighten(byPercentage: 99.0)?.hexValue()
+                else { return }
+            
+            self.viewModel
+                .save(newCategory: resultTextItem, colour: color)
+                .subscribe(onCompleted: {
+                    self.scrollToNewRow()
+                }, onError: { error in
+                    print(error.localizedDescription)
+                }).disposed(by: self.bag)
         }
+        
         alert.addTextField { textField in
             textField.placeholder = "Create new category"
             inputTextItem = textField
         }
+        
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
-          //fillTheList() // stub
     }
-    
-    // stub
-//    func fillTheList() {
-//
-//        for n in 0...100 {
-//
-//            let entity = NSEntityDescription.entity(forEntityName: "Category", in: self.context)
-//
-//            let newCategory = NSManagedObject(entity: entity!, insertInto: self.context) as! Category
-//            newCategory.name = "\(n)"
-//            newCategory.colour = UIColor.randomFlat().lighten(byPercentage: 99.0)!.hexValue()
-//            self.save(category: newCategory)
-//
-//        }
-//    }
 }
 
 // MARK: - Animations
 private extension CategoryTableViewController {
     
-    func appearanceAnimation(tableView: UITableView) {
+    func appearanceAnimation() {
         
-        guard categoryArray.isEmpty == false, firstOpening! else { return }
+        guard viewModel.numberOfRows() != 0, firstOpening == true  else { return }
 
-        for index in 0...categoryArray.count - 1  {
-            
+        for index in 0...viewModel.numberOfRows() - 1  {
+
             guard let cell = tableView.cellForRow(at: IndexPath(row: index, section: 0)) else { return }
-            
+
             cell.alpha = 0
             cell.transform = CGAffineTransform(translationX: 0, y: -(cell.frame.height) * 2)
-            
+
             UIView.animate(withDuration: 0.8,
                            delay: Double(index) * 0.1,
                            usingSpringWithDamping: 0.5,
@@ -163,93 +107,16 @@ private extension CategoryTableViewController {
     }
 }
 
-// MARK: - NSFetchedResultsControllerDelegate
-extension CategoryTableViewController: NSFetchedResultsControllerDelegate {
-    
-    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.beginUpdates()
-    }
-    
-    func controller(_ controller: NSFetchedResultsController<NSFetchRequestResult>, didChange anObject: Any, at indexPath: IndexPath?, for type: NSFetchedResultsChangeType, newIndexPath: IndexPath?) {
-        
-        guard type == .insert else { return }
-        
-        tableView.insertRows(at: [IndexPath(row: categoryArray.count - 1, section: 0)], with: .automatic)
-    }
-    
-    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
-        tableView.endUpdates()
-    }
-}
-
 // MARK: - Private
 private extension CategoryTableViewController {
-    
-    func prepareFetchedResultController() {
-        
-        fetchedResultsController.delegate = self
-        
-        do {
-            try self.fetchedResultsController.performFetch()
-        } catch {
-            let fetchError = error as NSError
-            print("Unable to Perform Fetch Request")
-            print("\(fetchError), \(fetchError.localizedDescription)")
-        }
-    }
-    
-    func save(category: Category) {
-            
-        do {
-            
-            categoryArray.append(category)
-            
-            try context.save()
-            
-        } catch {
-            print(error.localizedDescription)
-        }
-        
-        scrollToNewRow()
-    }
-    
-    func delete(category: Category) {
-        
-        context.delete(category)
-        
-        do {
-            
-            try context.save()
-            
-            load()
-            
-        } catch {
-            print(error.localizedDescription)
-        }
-    }
-    
-    func load() {
-        
-        let  fetchRequest: NSFetchRequest<Category> = Category.fetchRequest()
-        
-        fetchRequest.sortDescriptors = [ dateSortDescriptor ]
-        
-        do {
-            
-            let resultFetchRequest = try context.fetch(fetchRequest)
-            
-            categoryArray = resultFetchRequest
 
-        } catch {
-            print(error.localizedDescription)
-        }
-    }
-    
     func scrollToNewRow() {
-        tableView.scrollToRow(at: IndexPath(item: (categoryArray.count - 1), section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
+        tableView.scrollToRow(at: IndexPath(item: viewModel.numberOfRows() - 1, section: 0), at: UITableView.ScrollPosition.bottom, animated: true)
     }
     
     func setupView() {
+        tableView.delegate = nil
+        tableView.dataSource = nil
         tableView.rowHeight = 60.0
         tableView.separatorStyle = .none
         
@@ -258,6 +125,22 @@ private extension CategoryTableViewController {
         
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addButtonPressed))
         navigationItem.rightBarButtonItems = [addButton]
+        subscribe()
+    }
+    
+    func subscribe() {
+        
+        viewModel.categories.drive(tableView.rx.items(cellIdentifier: "categoryCell", cellType: SwipeTableViewCell.self)) { row, element, cell in
+            cell.rx.base.delegate = self
+            cell.textLabel?.text = element.name
+            let colour = UIColor(hexString: element.colour ?? "1D9BF6")
+            cell.backgroundColor = colour
+            cell.textLabel?.textColor = ContrastColorOf(backgroundColor: colour!, returnFlat: true)
+            }.disposed(by: bag)
+        
+        tableView.rx.itemSelected.subscribe(onNext: { indexPath in
+            self.viewModel.openCategory(indexPath: indexPath)
+        }).disposed(by: bag)
     }
     
     func setupNavigationBarStyle() {
@@ -268,4 +151,5 @@ private extension CategoryTableViewController {
     }
 }
 
+// MARK: - StoryboardInstantinable
 extension CategoryTableViewController: StoryboardInstantinable {}

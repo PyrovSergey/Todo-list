@@ -8,7 +8,8 @@
 
 import UIKit
 import SwipeCellKit
-
+import RxSwift
+import RxCocoa
 
 class SwipeTableViewController: UITableViewController {
 
@@ -35,7 +36,7 @@ extension SwipeTableViewController: SwipeTableViewCellDelegate {
         let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
             // handle action by updating model with deletion
             self.updateModel(at: indexPath)
-            action.fulfill(with: .delete)
+            //action.fulfill(with: .delete)
         }
         // customize the action appearance
         deleteAction.image = UIImage(named: "delete-icon")
@@ -44,7 +45,7 @@ extension SwipeTableViewController: SwipeTableViewCellDelegate {
     
     func tableView(_ tableView: UITableView, editActionsOptionsForRowAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
         var options = SwipeOptions()
-        options.expansionStyle = .destructive
+        options.expansionStyle = .destructive(automaticallyDelete: false)
         options.transitionStyle = .border
         return options
     }

@@ -21,12 +21,9 @@
                             <rect key="frame" x="0.0" y="0.0" width="414" height="44"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                             <textInputTraits key="textInputTraits"/>
-                            <connections>
-                                <outlet property="delegate" destination="BIx-R0-hNI" id="OOl-wc-xaG"/>
-                            </connections>
                         </searchBar>
                         <prototypes>
-                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="Cell" rowHeight="37" id="teR-0U-7cm" customClass="SwipeTableViewCell" customModule="SwipeCellKit">
+                            <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" preservesSuperviewLayoutMargins="YES" selectionStyle="default" indentationWidth="10" reuseIdentifier="todoCell" rowHeight="37" id="teR-0U-7cm" customClass="SwipeTableViewCell" customModule="SwipeCellKit">
                                 <rect key="frame" x="0.0" y="72" width="414" height="37"/>
                                 <autoresizingMask key="autoresizingMask"/>
                                 <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" preservesSuperviewLayoutMargins="YES" insetsLayoutMarginsFromSafeArea="NO" tableViewCell="teR-0U-7cm" id="XI7-2k-a5S">
@@ -35,16 +32,14 @@
                                 </tableViewCellContentView>
                             </tableViewCell>
                         </prototypes>
-                        <connections>
-                            <outlet property="dataSource" destination="BIx-R0-hNI" id="bCx-jq-GOR"/>
-                            <outlet property="delegate" destination="BIx-R0-hNI" id="owS-Q2-R8J"/>
-                        </connections>
                     </tableView>
                     <connections>
-                        <outlet property="searchBar" destination="mGA-Db-C8A" id="1JC-Wa-B3r"/>
+                        <outlet property="searchBar" destination="mGA-Db-C8A" id="TcQ-ee-Gbe"/>
+                        <outlet property="viewModel" destination="Mbh-PY-QLC" id="9Hc-VO-hD6"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="7SM-gc-fuI" userLabel="First Responder" sceneMemberID="firstResponder"/>
+                <customObject id="Mbh-PY-QLC" customClass="TodoViewModel" customModule="To_Do" customModuleProvider="target"/>
             </objects>
             <point key="canvasLocation" x="1922" y="-217"/>
         </scene>
